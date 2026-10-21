@@ -18,3 +18,5 @@ class Config:
     APP_TIMEZONE = "Asia/Kolkata"           # P-5
     CANCELLATION_DEADLINE_HOURS = 12        # P-3
     BOOKING_HORIZON_DAYS = 30               # P-6
+    SESSION_COOKIE_HTTPONLY = True   # JavaScript cannot read the session cookie
+    SESSION_COOKIE_SAMESITE = "Lax"  # browser won't send it on cross-site POSTs

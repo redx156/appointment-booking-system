@@ -4,7 +4,8 @@ from flask import Flask
 
 from app.cli import register_cli
 from app.config import Config
-from app.extensions import csrf, db
+from app.errors import register_error_handlers
+from app.extensions import csrf, db, login_manager
 
 
 def create_app(config_class=Config):
@@ -18,15 +19,26 @@ def create_app(config_class=Config):
 
     db.init_app(app)
     csrf.init_app(app)
-    # Flask-Login (login_manager.init_app) is added in Step 4,
-    # once the user_loader exists.
+    login_manager.init_app(app)
+    login_manager.login_view = "auth.login"
+    login_manager.login_message = "Please log in to continue."
+    login_manager.login_message_category = "warning"
 
-    from app import models  # noqa: F401  (registers tables with SQLAlchemy)
+    from app import models  # noqa: F401  (registers tables and the user_loader)
 
     register_cli(app)
+    register_error_handlers(app)
 
+    from app.blueprints.admin import bp as admin_bp
+    from app.blueprints.auth import bp as auth_bp
     from app.blueprints.main import bp as main_bp
+    from app.blueprints.provider import bp as provider_bp
+    from app.blueprints.student import bp as student_bp
 
     app.register_blueprint(main_bp)
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(student_bp)
+    app.register_blueprint(provider_bp)
+    app.register_blueprint(admin_bp)
 
     return app

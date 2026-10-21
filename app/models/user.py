@@ -5,7 +5,7 @@ from sqlalchemy import CheckConstraint, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from app.extensions import db
+from app.extensions import db, login_manager
 from app.models.common import Role, utcnow
 
 
@@ -34,3 +34,15 @@ class User(UserMixin, db.Model):
 
     def __repr__(self) -> str:
         return f"<User {self.email} ({self.role})>"
+
+
+@login_manager.user_loader
+def load_user(user_id: str):
+    """Called on every request to turn the session's user id into a User object.
+
+    Returning None for a deactivated account ends that user's session immediately.
+    """
+    user = db.session.get(User, int(user_id))
+    if user is None or not user.is_active:
+        return None
+    return user

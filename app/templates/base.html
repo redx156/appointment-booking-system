@@ -19,9 +19,20 @@
       <div class="collapse navbar-collapse" id="mainNav">
         <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
           {% if current_user.is_authenticated %}
-            <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('main.dashboard') }}">Dashboard</a>
-            </li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+            {% if current_user.role == 'student' %}
+              <li class="nav-item"><a class="nav-link" href="{{ url_for('student.providers') }}">Find a provider</a></li>
+              <li class="nav-item"><a class="nav-link" href="{{ url_for('student.appointments') }}">My appointments</a></li>
+              <li class="nav-item"><a class="nav-link" href="{{ url_for('student.history') }}">History</a></li>
+            {% elif current_user.role == 'provider' %}
+              <li class="nav-item"><a class="nav-link" href="{{ url_for('provider.availability') }}">Availability</a></li>
+              <li class="nav-item"><a class="nav-link" href="{{ url_for('provider.appointments') }}">Appointments</a></li>
+            {% elif current_user.role == 'admin' %}
+              <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.users') }}">Users</a></li>
+              <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.providers') }}">Providers</a></li>
+              <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.categories') }}">Categories</a></li>
+              <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.appointments') }}">Appointments</a></li>
+            {% endif %}
             <li class="nav-item">
               <span class="navbar-text small">
                 {{ current_user.name }}

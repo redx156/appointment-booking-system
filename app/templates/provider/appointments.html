@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% from "partials/_status.html" import status_badge %}
+
+{% block title %}Appointments | Appointment Booking{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Appointments</h1>
+  <a class="btn btn-outline-secondary" href="{{ url_for('provider.dashboard') }}">Back to dashboard</a>
+</div>
+
+<ul class="nav nav-pills mb-3">
+  <li class="nav-item">
+    <a class="nav-link {% if view == 'upcoming' %}active{% endif %}" href="{{ url_for('provider.appointments') }}">Upcoming</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link {% if view == 'history' %}active{% endif %}" href="{{ url_for('provider.appointments', view='history') }}">History</a>
+  </li>
+</ul>
+
+{% if items %}
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead><tr><th>Student</th><th>Date</th><th>Time</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        {% for a in items %}
+          <tr>
+            <td>{{ a.student.name }}</td>
+            <td>{{ a.start_at|local_dt("%a, %d %b %Y") }}</td>
+            <td>{{ a.start_at|local_dt("%I:%M %p") }} - {{ a.end_at|local_dt("%I:%M %p") }}</td>
+            <td>{{ status_badge(a, now) }}</td>
+            <td class="text-end">
+              <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('provider.appointment_detail', appointment_id=a.id) }}">Details</a>
+              {% if a.status == 'confirmed' and a.start_at <= now %}
+                <form method="post" class="d-inline"
+                      action="{{ url_for('provider.complete_appointment', appointment_id=a.id) }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-sm btn-success">Mark completed</button>
+                </form>
+              {% elif a.status == 'confirmed' %}
+                <form method="post" class="d-inline"
+                      action="{{ url_for('provider.cancel_appointment', appointment_id=a.id) }}"
+                      data-confirm="Cancel the appointment with {{ a.student.name }}?"
+                      onsubmit="return confirm(this.dataset.confirm);">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-sm btn-outline-danger">Cancel</button>
+                </form>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <div class="alert alert-info">
+    {% if view == 'upcoming' %}No upcoming appointments.{% else %}No appointment history yet.{% endif %}
+  </div>
+{% endif %}
+{% endblock %}

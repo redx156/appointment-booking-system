@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Student Dashboard | Appointment Booking{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-1">Student Dashboard</h1>
+<p class="text-muted">Welcome, {{ current_user.name }}.</p>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-6 col-lg-4">
+    <div class="card h-100 shadow-sm">
+      <div class="card-body">
+        <h2 class="h5">Book an appointment</h2>
+        <p class="text-muted">Browse service providers and pick a date and time.</p>
+        <a class="btn btn-primary" href="{{ url_for('student.providers') }}">Find a provider</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2 class="h5">Upcoming appointments</h2>
+{% if upcoming %}
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead><tr><th>Provider</th><th>Date</th><th>Time</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for a in upcoming %}
+          <tr>
+            <td>{{ a.provider.name }}</td>
+            <td>{{ a.start_at|local_dt("%A, %d %b %Y") }}</td>
+            <td>{{ a.start_at|local_dt("%I:%M %p") }}</td>
+            <td><span class="badge text-bg-success">Confirmed</span></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <div class="alert alert-info">You have no upcoming appointments.</div>
+{% endif %}
+{% endblock %}

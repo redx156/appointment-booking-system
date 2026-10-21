@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% from "partials/_status.html" import status_badge %}
+
+{% block title %}Appointment #{{ appointment.id }} | Appointment Booking{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <h1 class="h3 mb-3">Appointment #{{ appointment.id }}</h1>
+        <dl class="row mb-3">
+          <dt class="col-sm-4">Student</dt>
+          <dd class="col-sm-8">{{ appointment.student.name }}</dd>
+          <dt class="col-sm-4">Email</dt>
+          <dd class="col-sm-8">{{ appointment.student.email }}</dd>
+          <dt class="col-sm-4">Date</dt>
+          <dd class="col-sm-8">{{ appointment.start_at|local_dt("%A, %d %B %Y") }}</dd>
+          <dt class="col-sm-4">Time</dt>
+          <dd class="col-sm-8">{{ appointment.start_at|local_dt("%I:%M %p") }} - {{ appointment.end_at|local_dt("%I:%M %p") }}</dd>
+          <dt class="col-sm-4">Status</dt>
+          <dd class="col-sm-8">{{ status_badge(appointment, now) }}</dd>
+          <dt class="col-sm-4">Student's note</dt>
+          <dd class="col-sm-8">{{ appointment.notes or "-" }}</dd>
+          <dt class="col-sm-4">Booked on</dt>
+          <dd class="col-sm-8">{{ appointment.created_at|local_dt }}</dd>
+          {% if appointment.cancelled_at %}
+            <dt class="col-sm-4">Cancelled on</dt>
+            <dd class="col-sm-8">{{ appointment.cancelled_at|local_dt }}</dd>
+          {% endif %}
+        </dl>
+
+        {% if appointment.status == 'confirmed' and appointment.start_at <= now %}
+          <form method="post" class="d-inline"
+                action="{{ url_for('provider.complete_appointment', appointment_id=appointment.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-success">Mark completed</button>
+          </form>
+        {% elif appointment.status == 'confirmed' %}
+          <form method="post" class="d-inline"
+                action="{{ url_for('provider.cancel_appointment', appointment_id=appointment.id) }}"
+                onsubmit="return confirm('Cancel this appointment?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-outline-danger">Cancel appointment</button>
+          </form>
+        {% endif %}
+        <a class="btn btn-outline-secondary ms-2" href="{{ url_for('provider.appointments') }}">Back to list</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Reschedule | Appointment Booking{% endblock %}
+
+{% block content %}
+{% set labels = {'booked': 'Booked', 'blocked': 'Unavailable', 'past': 'Passed', 'too_far': 'Too far ahead'} %}
+
+<div class="d-flex justify-content-between align-items-start mb-3">
+  <div>
+    <h1 class="h3 mb-1">Reschedule appointment</h1>
+    <p class="text-muted mb-0">
+      {{ provider.name }} &middot; current time:
+      {{ appointment.start_at|local_dt("%A, %d %b %Y, %I:%M %p") }}
+    </p>
+  </div>
+  <a class="btn btn-outline-secondary" href="{{ url_for('student.appointments') }}">Back</a>
+</div>
+
+{% if day is none %}
+  <h2 class="h5">Pick a new date</h2>
+  <div class="calendar-grid mb-3">
+    {% for name in ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] %}
+      <div class="cal-head">{{ name }}</div>
+    {% endfor %}
+    {% for week in weeks %}
+      {% for cell in week %}
+        {% if cell.state == 'available' %}
+          <a class="btn btn-outline-success cal-day"
+             href="{{ url_for('student.reschedule', appointment_id=appointment.id, date=cell.day.isoformat()) }}"
+             aria-label="{{ cell.day.strftime('%A %d %B') }}, slots available">
+            {{ cell.day.day }}<small>{{ cell.day.strftime('%b') }}</small>
+          </a>
+        {% elif cell.state == 'unavailable' %}
+          <span class="btn btn-light disabled cal-day text-muted" aria-disabled="true">
+            {{ cell.day.day }}<small>{{ cell.day.strftime('%b') }}</small>
+          </span>
+        {% else %}
+          <div class="cal-day"></div>
+        {% endif %}
+      {% endfor %}
+    {% endfor %}
+  </div>
+{% else %}
+  <h2 class="h5">{{ day.strftime('%A, %d %B %Y') }}</h2>
+  <p class="text-muted small">
+    <a href="{{ url_for('student.reschedule', appointment_id=appointment.id) }}">Choose another date</a>
+  </p>
+  {% if slots %}
+    <div class="row g-2">
+      {% for slot in slots %}
+        <div class="col-6 col-md-4 col-lg-3">
+          {% if slot.start_at == appointment.start_at %}
+            <button type="button" class="btn btn-outline-primary w-100" disabled>
+              {{ slot.local_start.strftime('%I:%M %p') }}<span class="d-block small">Current</span>
+            </button>
+          {% elif slot.available %}
+            <form method="post" action="{{ url_for('student.reschedule', appointment_id=appointment.id) }}"
+                  data-confirm="Move your appointment to {{ slot.local_start.strftime('%d %b, %I:%M %p') }}?"
+                  onsubmit="return confirm(this.dataset.confirm);">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="start" value="{{ slot.start_at.isoformat() }}">
+              <button type="submit" class="btn btn-success w-100">{{ slot.local_start.strftime('%I:%M %p') }}</button>
+            </form>
+          {% else %}
+            <button type="button" class="btn btn-outline-secondary w-100" disabled>
+              {{ slot.local_start.strftime('%I:%M %p') }}<span class="d-block small">{{ labels[slot.reason] }}</span>
+            </button>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="alert alert-info">This provider does not offer appointments on this day.</div>
+  {% endif %}
+{% endif %}
+{% endblock %}

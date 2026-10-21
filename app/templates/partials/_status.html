@@ -1,0 +1,13 @@
+{% macro status_badge(appointment, now) %}
+  {% if appointment.status == 'confirmed' %}
+    {% if appointment.end_at <= now %}
+      <span class="badge text-bg-warning">Awaiting completion</span>
+    {% else %}
+      <span class="badge text-bg-success">Confirmed</span>
+    {% endif %}
+  {% elif appointment.status == 'completed' %}
+    <span class="badge text-bg-primary">Completed</span>
+  {% else %}
+    <span class="badge text-bg-secondary">Cancelled</span>
+  {% endif %}
+{% endmacro %}

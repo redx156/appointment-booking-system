@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% from "partials/_status.html" import status_badge %}
+
+{% block title %}Appointments | Appointment Booking{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">All appointments</h1>
+  <a class="btn btn-outline-secondary" href="{{ url_for('admin.dashboard') }}">Back to dashboard</a>
+</div>
+
+<ul class="nav nav-pills mb-3">
+  {% for value, label in [('', 'All'), ('confirmed', 'Confirmed'), ('completed', 'Completed'), ('cancelled', 'Cancelled')] %}
+    <li class="nav-item">
+      <a class="nav-link {% if status == value %}active{% endif %}"
+         href="{{ url_for('admin.appointments', status=value) if value else url_for('admin.appointments') }}">{{ label }}</a>
+    </li>
+  {% endfor %}
+</ul>
+
+{% if items %}
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead><tr><th>#</th><th>Student</th><th>Provider</th><th>Date</th><th>Time</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for a in items %}
+          <tr>
+            <td>{{ a.id }}</td>
+            <td>{{ a.student.name }}</td>
+            <td>{{ a.provider.name }}</td>
+            <td>{{ a.start_at|local_dt("%a, %d %b %Y") }}</td>
+            <td>{{ a.start_at|local_dt("%I:%M %p") }} - {{ a.end_at|local_dt("%I:%M %p") }}</td>
+            <td>{{ status_badge(a, now) }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="text-muted small">Showing up to 200 most recent. Administrators can view appointments but not change them.</p>
+{% else %}
+  <div class="alert alert-info">No appointments found.</div>
+{% endif %}
+{% endblock %}

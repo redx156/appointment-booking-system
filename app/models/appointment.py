@@ -20,18 +20,12 @@ class Appointment(db.Model):
         ),
         Index("ix_appointments_provider_start", "provider_id", "start_at"),
         Index("ix_appointments_student_start", "student_id", "start_at"),
-        # Safety nets that only apply to confirmed appointments:
+        # Safety net: two confirmed appointments cannot start at the same moment.
+        # (The one-upcoming-appointment-per-provider rule P-7 lives in the booking service.)
         Index(
             "uq_confirmed_provider_start",
             "provider_id",
             "start_at",
-            unique=True,
-            sqlite_where=text("status = 'confirmed'"),
-        ),
-        Index(
-            "uq_confirmed_student_provider",
-            "student_id",
-            "provider_id",
             unique=True,
             sqlite_where=text("status = 'confirmed'"),
         ),

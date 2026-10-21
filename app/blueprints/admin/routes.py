@@ -6,7 +6,7 @@ from app.blueprints.admin import bp
 from app.blueprints.admin.forms import CategoryForm, ProviderCreateForm, ProviderEditForm
 from app.extensions import db
 from app.models import Appointment, AppointmentCategory, ServiceProvider, User
-from app.models.common import AppointmentStatus, Role
+from app.models.common import AppointmentStatus, Role, utcnow
 from app.services import admin as admin_service
 from app.services.admin import AdminError
 from app.utils.roles import role_required
@@ -193,3 +193,16 @@ def edit_provider(provider_id):
             flash("Provider updated.", "success")
             return redirect(url_for("admin.providers"))
     return render_template("admin/provider_form.html", form=form, is_new=False, provider=provider)
+
+
+@bp.route("/appointments")
+@role_required(Role.ADMIN)
+def appointments():
+    status = request.args.get("status", "")
+    query = db.select(Appointment)
+    if status in AppointmentStatus.ALL:
+        query = query.where(Appointment.status == status)
+    else:
+        status = ""
+    items = db.session.execute(query.order_by(Appointment.start_at.desc()).limit(200)).scalars().all()
+    return render_template("admin/appointments.html", items=items, status=status, now=utcnow())

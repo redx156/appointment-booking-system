@@ -2,3 +2,30 @@
   background: #f1f5fb;
   border-radius: 1rem;
 }
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.35rem;
+}
+
+.calendar-grid .cal-head {
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+.calendar-grid .cal-day {
+  display: block;
+  width: 100%;
+  min-height: 3.5rem;
+  padding: 0.4rem 0.2rem;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.calendar-grid .cal-day small {
+  display: block;
+  font-size: 0.7rem;
+}

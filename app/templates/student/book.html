@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% from "partials/_form_macros.html" import render_field %}
+
+{% block title %}Confirm booking | Appointment Booking{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <h1 class="h3 mb-3">Confirm your appointment</h1>
+
+        <dl class="row mb-3">
+          <dt class="col-sm-4">Provider</dt>
+          <dd class="col-sm-8">{{ provider.name }}</dd>
+          <dt class="col-sm-4">Category</dt>
+          <dd class="col-sm-8">{{ provider.category.name }}</dd>
+          <dt class="col-sm-4">Date</dt>
+          <dd class="col-sm-8">{{ slot.local_start.strftime('%A, %d %B %Y') }}</dd>
+          <dt class="col-sm-4">Time</dt>
+          <dd class="col-sm-8">
+            {{ slot.local_start.strftime('%I:%M %p') }} - {{ slot.local_end.strftime('%I:%M %p') }}
+            ({{ provider.slot_duration_minutes }} minutes)
+          </dd>
+        </dl>
+
+        <form method="post" action="{{ url_for('student.book', provider_id=provider.id) }}" novalidate>
+          {{ form.hidden_tag() }}
+          {{ render_field(form.notes, rows=3) }}
+          <p class="text-muted small">
+            Cancellations and changes are allowed up to {{ config['CANCELLATION_DEADLINE_HOURS'] }}
+            hours before the start time.
+          </p>
+          {{ form.submit(class="btn btn-primary") }}
+          <a class="btn btn-outline-secondary ms-2"
+             href="{{ url_for('student.slots', provider_id=provider.id, date=slot.local_start.date().isoformat()) }}">Back</a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

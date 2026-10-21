@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% from "partials/_status.html" import status_badge %}
+
+{% block title %}My appointments | Appointment Booking{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">My appointments</h1>
+  <a class="btn btn-primary" href="{{ url_for('student.providers') }}">Book a new appointment</a>
+</div>
+
+<ul class="nav nav-pills mb-3">
+  <li class="nav-item">
+    <a class="nav-link {% if view == 'upcoming' %}active{% endif %}" href="{{ url_for('student.appointments') }}">Upcoming</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link {% if view == 'history' %}active{% endif %}" href="{{ url_for('student.history') }}">History</a>
+  </li>
+</ul>
+
+{% if items %}
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead>
+        <tr><th>Provider</th><th>Date</th><th>Time</th><th>Status</th>{% if view == 'upcoming' %}<th></th>{% endif %}</tr>
+      </thead>
+      <tbody>
+        {% for a in items %}
+          <tr>
+            <td>{{ a.provider.name }}<div class="text-muted small">{{ a.provider.category.name }}</div></td>
+            <td>{{ a.start_at|local_dt("%a, %d %b %Y") }}</td>
+            <td>{{ a.start_at|local_dt("%I:%M %p") }} - {{ a.end_at|local_dt("%I:%M %p") }}</td>
+            <td>{{ status_badge(a, now) }}</td>
+            {% if view == 'upcoming' %}
+              {% set can_change = (a.start_at - now).total_seconds() >= config['CANCELLATION_DEADLINE_HOURS'] * 3600 %}
+              <td class="text-end">
+                {% if can_change %}
+                  <a class="btn btn-sm btn-outline-primary" href="{{ url_for('student.reschedule', appointment_id=a.id) }}">Reschedule</a>
+                  <form method="post" class="d-inline"
+                        action="{{ url_for('student.cancel', appointment_id=a.id) }}"
+                        data-confirm="Cancel your appointment with {{ a.provider.name }}?"
+                        onsubmit="return confirm(this.dataset.confirm);">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">Cancel</button>
+                  </form>
+                {% else %}
+                  <span class="text-muted small">Changes close {{ config['CANCELLATION_DEADLINE_HOURS'] }} h before</span>
+                {% endif %}
+              </td>
+            {% endif %}
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <div class="alert alert-info">
+    {% if view == 'upcoming' %}You have no upcoming appointments.{% else %}No appointment history yet.{% endif %}
+  </div>
+{% endif %}
+{% endblock %}

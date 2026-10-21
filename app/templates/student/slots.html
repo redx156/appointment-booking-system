@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Choose a time | Appointment Booking{% endblock %}
+
+{% block content %}
+{% set labels = {
+  'booked': 'Booked',
+  'blocked': 'Unavailable',
+  'past': 'Passed',
+  'too_far': 'Too far ahead'
+} %}
+
+<div class="d-flex justify-content-between align-items-start mb-3">
+  <div>
+    <h1 class="h3 mb-1">{{ provider.name }}</h1>
+    <p class="text-muted mb-0">{{ day.strftime('%A, %d %B %Y') }} &middot; times in {{ config['APP_TIMEZONE'] }}</p>
+  </div>
+  <a class="btn btn-outline-secondary" href="{{ url_for('student.provider_calendar', provider_id=provider.id) }}">Back to calendar</a>
+</div>
+
+{% if slots %}
+  <div class="row g-2">
+    {% for slot in slots %}
+      <div class="col-6 col-md-4 col-lg-3">
+        {% if slot.available %}
+          <a class="btn btn-success w-100"
+             href="{{ url_for('student.book', provider_id=provider.id, start=slot.start_at.isoformat()) }}">
+            {{ slot.local_start.strftime('%I:%M %p') }}
+          </a>
+        {% else %}
+          <button type="button" class="btn btn-outline-secondary w-100" disabled>
+            {{ slot.local_start.strftime('%I:%M %p') }}
+            <span class="d-block small">{{ labels[slot.reason] }}</span>
+          </button>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="alert alert-info">This provider does not offer appointments on this day.</div>
+{% endif %}
+{% endblock %}

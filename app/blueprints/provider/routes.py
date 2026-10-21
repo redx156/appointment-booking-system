@@ -18,6 +18,16 @@ from app.services.slots import generate_slots
 from app.utils.roles import role_required
 from app.utils.timeutils import local_today
 
+from sqlalchemy import and_, not_
+
+from app.models import Appointment
+from app.models.common import AppointmentStatus
+from app.services.appointments import (
+    AppointmentError,
+    AppointmentNotFound,
+    cancel_by_provider,
+    complete_by_provider,
+)
 
 def current_provider():
     """The logged-in provider's own profile. Every query below is scoped to it (rule BR-4)."""
@@ -140,3 +150,66 @@ def preview():
         except ValueError:
             flash("Invalid date. Showing today instead.", "danger")
     return render_template("provider/preview.html", day=day, slots=generate_slots(provider, day))
+
+
+def get_own_appointment(provider, appointment_id):
+    appointment = db.session.get(Appointment, appointment_id)
+    if appointment is None or appointment.provider_id != provider.id:
+        abort(404)  # providers see only their own appointments (BR-4)
+    return appointment
+
+
+@bp.route("/appointments")
+@role_required(Role.PROVIDER)
+def appointments():
+    provider = current_provider()
+    view = "history" if request.args.get("view") == "history" else "upcoming"
+    now = utcnow()
+    query = db.select(Appointment).where(Appointment.provider_id == provider.id)
+    if view == "upcoming":
+        query = query.where(
+            Appointment.status == AppointmentStatus.CONFIRMED, Appointment.end_at > now
+        ).order_by(Appointment.start_at)
+    else:
+        query = query.where(
+            not_(and_(Appointment.status == AppointmentStatus.CONFIRMED, Appointment.end_at > now))
+        ).order_by(Appointment.start_at.desc())
+    items = db.session.execute(query).scalars().all()
+    return render_template("provider/appointments.html", items=items, view=view, now=now)
+
+
+@bp.route("/appointments/<int:appointment_id>")
+@role_required(Role.PROVIDER)
+def appointment_detail(appointment_id):
+    appointment = get_own_appointment(current_provider(), appointment_id)
+    return render_template("provider/appointment_detail.html", appointment=appointment, now=utcnow())
+
+
+@bp.route("/appointments/<int:appointment_id>/cancel", methods=["POST"])
+@role_required(Role.PROVIDER)
+def cancel_appointment(appointment_id):
+    provider = current_provider()
+    try:
+        cancel_by_provider(provider.id, appointment_id)
+    except AppointmentNotFound:
+        abort(404)
+    except AppointmentError as error:
+        flash(str(error), "danger")
+    else:
+        flash("Appointment cancelled.", "success")
+    return redirect(url_for("provider.appointments"))
+
+
+@bp.route("/appointments/<int:appointment_id>/complete", methods=["POST"])
+@role_required(Role.PROVIDER)
+def complete_appointment(appointment_id):
+    provider = current_provider()
+    try:
+        complete_by_provider(provider.id, appointment_id)
+    except AppointmentNotFound:
+        abort(404)
+    except AppointmentError as error:
+        flash(str(error), "danger")
+    else:
+        flash("Appointment marked as completed.", "success")
+    return redirect(url_for("provider.appointments"))

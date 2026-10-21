@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}{{ provider.name }} | Appointment Booking{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-3">
+  <div>
+    <h1 class="h3 mb-1">{{ provider.name }}</h1>
+    <p class="text-muted mb-0">
+      {{ provider.category.name }} &middot; {{ provider.specialization }} &middot;
+      {{ provider.slot_duration_minutes }}-minute appointments
+    </p>
+  </div>
+  <a class="btn btn-outline-secondary" href="{{ url_for('student.providers') }}">All providers</a>
+</div>
+
+{% if provider.bio %}<p>{{ provider.bio }}</p>{% endif %}
+
+<h2 class="h5">Pick a date</h2>
+<p class="text-muted small">
+  Times are shown in {{ config['APP_TIMEZONE'] }}. You can book up to
+  {{ config['BOOKING_HORIZON_DAYS'] }} days ahead.
+</p>
+
+{% if not has_open_days %}
+  <div class="alert alert-info">This provider has no open dates in the next {{ config['BOOKING_HORIZON_DAYS'] }} days.</div>
+{% endif %}
+
+<div class="calendar-grid mb-3">
+  {% for name in ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] %}
+    <div class="cal-head">{{ name }}</div>
+  {% endfor %}
+
+  {% for week in weeks %}
+    {% for cell in week %}
+      {% if cell.state == 'available' %}
+        <a class="btn btn-outline-success cal-day"
+           href="{{ url_for('student.slots', provider_id=provider.id, date=cell.day.isoformat()) }}"
+           aria-label="{{ cell.day.strftime('%A %d %B') }}, slots available">
+          {{ cell.day.day }}<small>{{ cell.day.strftime('%b') }}</small>
+        </a>
+      {% elif cell.state == 'unavailable' %}
+        <span class="btn btn-light disabled cal-day text-muted" aria-disabled="true"
+              aria-label="{{ cell.day.strftime('%A %d %B') }}, no slots available">
+          {{ cell.day.day }}<small>{{ cell.day.strftime('%b') }}</small>
+        </span>
+      {% else %}
+        <div class="cal-day"></div>
+      {% endif %}
+    {% endfor %}
+  {% endfor %}
+</div>
+
+<p class="small text-muted mb-0">
+  <span class="badge text-bg-success">Green</span> has open slots &nbsp;
+  <span class="badge text-bg-light text-muted border">Grey</span> has none
+</p>
+{% endblock %}

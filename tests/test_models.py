@@ -91,18 +91,6 @@ def test_cancelled_appointment_frees_the_slot(app):
     assert db.session.query(Appointment).count() == 2
 
 
-def test_student_has_one_confirmed_appointment_per_provider(app):
-    provider = make_provider()
-    student = make_user("s@example.com")
-    db.session.add(make_appointment(student, provider, start=START))
-    db.session.commit()
-
-    db.session.add(make_appointment(student, provider, start=START + timedelta(hours=2)))
-    with pytest.raises(IntegrityError):
-        db.session.commit()
-    db.session.rollback()
-
-
 def test_foreign_keys_are_enforced(app):
     orphan = Appointment(
         student_id=999,

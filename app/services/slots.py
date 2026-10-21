@@ -36,7 +36,10 @@ class Slot:
 
 
 def generate_slots(
-    provider: ServiceProvider, day: date, now_utc: Optional[datetime] = None
+    provider: ServiceProvider,
+    day: date,
+    now_utc: Optional[datetime] = None,
+    exclude_appointment_id: Optional[int] = None,
 ) -> list[Slot]:
     """All slots of `provider` on local date `day`, each marked available or not."""
     now_utc = now_utc or utcnow()
@@ -64,14 +67,16 @@ def generate_slots(
             BlockedTime.end_at > range_start,
         )
     ).scalars().all()
-    booked = db.session.execute(
-        db.select(Appointment).where(
-            Appointment.provider_id == provider.id,
-            Appointment.status != AppointmentStatus.CANCELLED,
-            Appointment.start_at < range_end,
-            Appointment.end_at > range_start,
-        )
-    ).scalars().all()
+    booked_query = db.select(Appointment).where(
+        Appointment.provider_id == provider.id,
+        Appointment.status != AppointmentStatus.CANCELLED,
+        Appointment.start_at < range_end,
+        Appointment.end_at > range_start,
+    )
+    if exclude_appointment_id is not None:
+        # Rescheduling: the appointment being moved must not block its own new slot.
+        booked_query = booked_query.where(Appointment.id != exclude_appointment_id)
+    booked = db.session.execute(booked_query).scalars().all()
 
     horizon_day = local_today(now_utc, tz) + timedelta(
         days=current_app.config["BOOKING_HORIZON_DAYS"]

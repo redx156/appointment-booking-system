@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% from "partials/_form_macros.html" import render_field %}
+
+{% block title %}{{ 'Add provider' if is_new else 'Edit provider' }} | Appointment Booking{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <h1 class="h3 mb-3">{{ 'Add a service provider' if is_new else 'Edit provider' }}</h1>
+        <form method="post" novalidate>
+          {{ form.hidden_tag() }}
+          {{ render_field(form.name, autofocus=true) }}
+          {% if is_new %}
+            {{ render_field(form.email, autocomplete="off") }}
+            {{ render_field(form.password, autocomplete="new-password") }}
+            <p class="form-text mt-n2">Share this initial password with the provider securely.</p>
+          {% endif %}
+          {{ render_field(form.category_id) }}
+          {{ render_field(form.specialization) }}
+          {{ render_field(form.bio, rows=4) }}
+          {{ form.submit(class="btn btn-primary") }}
+          <a class="btn btn-outline-secondary ms-2" href="{{ url_for('admin.providers') }}">Cancel</a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% from "partials/_form_macros.html" import render_field %}
+
+{% block title %}Edit category | Appointment Booking{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-6">
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <h1 class="h3 mb-3">Edit category</h1>
+        <form method="post" novalidate>
+          {{ form.hidden_tag() }}
+          {{ render_field(form.name, autofocus=true) }}
+          {{ render_field(form.description) }}
+          {{ form.submit(class="btn btn-primary") }}
+          <a class="btn btn-outline-secondary ms-2" href="{{ url_for('admin.categories') }}">Cancel</a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

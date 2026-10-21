@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Providers | Appointment Booking{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Service providers</h1>
+  <div>
+    <a class="btn btn-outline-secondary" href="{{ url_for('admin.dashboard') }}">Back to dashboard</a>
+    <a class="btn btn-primary" href="{{ url_for('admin.new_provider') }}">Add provider</a>
+  </div>
+</div>
+
+{% if providers %}
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead>
+        <tr><th>Name</th><th>Email</th><th>Category</th><th>Specialization</th><th>Slot</th><th>Status</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for p in providers %}
+          <tr>
+            <td>{{ p.user.name }}</td>
+            <td>{{ p.user.email }}</td>
+            <td>{{ p.category.name }}</td>
+            <td>{{ p.specialization }}</td>
+            <td>{{ p.slot_duration_minutes }} min</td>
+            <td>
+              {% if p.user.is_active %}
+                <span class="badge text-bg-success">Active</span>
+              {% else %}
+                <span class="badge text-bg-danger">Inactive</span>
+              {% endif %}
+            </td>
+            <td class="text-end">
+              <a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin.edit_provider', provider_id=p.id) }}">Edit</a>
+              <form method="post" class="d-inline"
+                    action="{{ url_for('admin.set_active', user_id=p.user.id) }}"
+                    data-confirm="{{ 'Deactivate' if p.user.is_active else 'Activate' }} {{ p.user.name }}?"
+                    onsubmit="return confirm(this.dataset.confirm);">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="active" value="{{ '0' if p.user.is_active else '1' }}">
+                <input type="hidden" name="return_to" value="providers">
+                {% if p.user.is_active %}
+                  <button type="submit" class="btn btn-sm btn-outline-danger">Deactivate</button>
+                {% else %}
+                  <button type="submit" class="btn btn-sm btn-outline-success">Activate</button>
+                {% endif %}
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <div class="alert alert-info">No providers yet. Click "Add provider" to create the first one.</div>
+{% endif %}
+{% endblock %}

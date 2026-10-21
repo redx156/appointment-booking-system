@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Users | Appointment Booking{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Users</h1>
+  <a class="btn btn-outline-secondary" href="{{ url_for('admin.dashboard') }}">Back to dashboard</a>
+</div>
+
+<ul class="nav nav-pills mb-3">
+  {% for value, label in [('', 'All'), ('student', 'Students'), ('provider', 'Providers'), ('admin', 'Admins')] %}
+    <li class="nav-item">
+      <a class="nav-link {% if role == value %}active{% endif %}"
+         href="{{ url_for('admin.users', role=value) if value else url_for('admin.users') }}">{{ label }}</a>
+    </li>
+  {% endfor %}
+</ul>
+
+{% if users %}
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead>
+        <tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Joined</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+          <tr>
+            <td>{{ u.name }}{% if u.id == current_user.id %} <span class="text-muted small">(you)</span>{% endif %}</td>
+            <td>{{ u.email }}</td>
+            <td><span class="badge text-bg-secondary">{{ u.role }}</span></td>
+            <td>
+              {% if u.is_active %}
+                <span class="badge text-bg-success">Active</span>
+              {% else %}
+                <span class="badge text-bg-danger">Inactive</span>
+              {% endif %}
+            </td>
+            <td>{{ u.created_at|local_dt("%d %b %Y") }}</td>
+            <td class="text-end">
+              {% if u.id != current_user.id %}
+                <form method="post" action="{{ url_for('admin.set_active', user_id=u.id) }}"
+                      data-confirm="{{ 'Deactivate' if u.is_active else 'Activate' }} {{ u.name }}?"
+                      onsubmit="return confirm(this.dataset.confirm);">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <input type="hidden" name="active" value="{{ '0' if u.is_active else '1' }}">
+                  <input type="hidden" name="return_to" value="users">
+                  {% if u.is_active %}
+                    <button type="submit" class="btn btn-sm btn-outline-danger">Deactivate</button>
+                  {% else %}
+                    <button type="submit" class="btn btn-sm btn-outline-success">Activate</button>
+                  {% endif %}
+                </form>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <div class="alert alert-info">No users found.</div>
+{% endif %}
+{% endblock %}

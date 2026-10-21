@@ -1,11 +1,12 @@
 {% macro render_field(field) %}
+{% set css = "form-select" if field.type == "SelectField" else "form-control" %}
 <div class="mb-3">
   {{ field.label(class="form-label") }}
   {% if field.errors %}
-    {{ field(class="form-control is-invalid", **kwargs) }}
+    {{ field(class=css ~ " is-invalid", **kwargs) }}
     <div class="invalid-feedback">{{ field.errors|join(" ") }}</div>
   {% else %}
-    {{ field(class="form-control", **kwargs) }}
+    {{ field(class=css, **kwargs) }}
   {% endif %}
 </div>
 {% endmacro %}

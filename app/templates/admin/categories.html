@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% from "partials/_form_macros.html" import render_field %}
+
+{% block title %}Categories | Appointment Booking{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Appointment categories</h1>
+  <a class="btn btn-outline-secondary" href="{{ url_for('admin.dashboard') }}">Back to dashboard</a>
+</div>
+
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <h2 class="h5">Add a category</h2>
+    <form method="post" action="{{ url_for('admin.categories') }}" novalidate>
+      {{ form.hidden_tag() }}
+      <div class="row">
+        <div class="col-md-5">{{ render_field(form.name) }}</div>
+        <div class="col-md-7">{{ render_field(form.description) }}</div>
+      </div>
+      {{ form.submit(class="btn btn-primary", value="Add category") }}
+    </form>
+  </div>
+</div>
+
+{% if categories %}
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead><tr><th>Name</th><th>Description</th><th>Providers</th><th></th></tr></thead>
+      <tbody>
+        {% for category in categories %}
+          {% set provider_count = category.providers|length %}
+          <tr>
+            <td>{{ category.name }}</td>
+            <td>{{ category.description or "-" }}</td>
+            <td>{{ provider_count }}</td>
+            <td class="text-end">
+              <a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin.edit_category', category_id=category.id) }}">Edit</a>
+              <form method="post" class="d-inline"
+                    action="{{ url_for('admin.delete_category', category_id=category.id) }}"
+                    data-confirm="Delete the category {{ category.name }}?"
+                    onsubmit="return confirm(this.dataset.confirm);">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-sm btn-outline-danger"
+                        {% if provider_count %}disabled title="In use by providers"{% endif %}>Delete</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <div class="alert alert-info">No categories yet. Add the first one above.</div>
+{% endif %}
+{% endblock %}

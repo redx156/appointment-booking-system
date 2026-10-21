@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard | Appointment Booking{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-1">Admin Dashboard</h1>
+<p class="text-muted">Signed in as {{ current_user.name }}.</p>
+
+{% set people = [('Students', stats.students), ('Providers', stats.providers), ('Admins', stats.admins), ('Categories', stats.categories)] %}
+<div class="row g-3 mb-3">
+  {% for label, value in people %}
+    <div class="col-6 col-lg-3">
+      <div class="card shadow-sm h-100">
+        <div class="card-body">
+          <div class="text-muted small">{{ label }}</div>
+          <div class="display-6 fw-semibold">{{ value }}</div>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
+{% set statuses = [('Confirmed appointments', stats.confirmed), ('Completed', stats.completed), ('Cancelled', stats.cancelled)] %}
+<div class="row g-3 mb-4">
+  {% for label, value in statuses %}
+    <div class="col-12 col-md-4">
+      <div class="card shadow-sm h-100">
+        <div class="card-body">
+          <div class="text-muted small">{{ label }}</div>
+          <div class="h2 mb-0">{{ value }}</div>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
+<div class="row g-3">
+  <div class="col-md-4">
+    <div class="card shadow-sm h-100"><div class="card-body">
+      <h2 class="h5">Users</h2>
+      <p class="text-muted">View accounts and activate or deactivate them.</p>
+      <a class="btn btn-primary" href="{{ url_for('admin.users') }}">Manage users</a>
+    </div></div>
+  </div>
+  <div class="col-md-4">
+    <div class="card shadow-sm h-100"><div class="card-body">
+      <h2 class="h5">Service providers</h2>
+      <p class="text-muted">Create provider accounts and edit their profiles.</p>
+      <a class="btn btn-primary" href="{{ url_for('admin.providers') }}">Manage providers</a>
+    </div></div>
+  </div>
+  <div class="col-md-4">
+    <div class="card shadow-sm h-100"><div class="card-body">
+      <h2 class="h5">Categories</h2>
+      <p class="text-muted">Organize providers into appointment categories.</p>
+      <a class="btn btn-primary" href="{{ url_for('admin.categories') }}">Manage categories</a>
+    </div></div>
+  </div>
+</div>
+{% endblock %}

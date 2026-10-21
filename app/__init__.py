@@ -2,6 +2,7 @@ import os
 
 from flask import Flask
 
+from app.cli import register_cli
 from app.config import Config
 from app.extensions import csrf, db
 
@@ -18,7 +19,11 @@ def create_app(config_class=Config):
     db.init_app(app)
     csrf.init_app(app)
     # Flask-Login (login_manager.init_app) is added in Step 4,
-    # once the User model and its user_loader exist.
+    # once the user_loader exists.
+
+    from app import models  # noqa: F401  (registers tables with SQLAlchemy)
+
+    register_cli(app)
 
     from app.blueprints.main import bp as main_bp
 

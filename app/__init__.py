@@ -6,6 +6,7 @@ from app.cli import register_cli
 from app.config import Config
 from app.errors import register_error_handlers
 from app.extensions import csrf, db, login_manager
+from app.utils.timeutils import format_local
 
 
 def create_app(config_class=Config):
@@ -23,6 +24,8 @@ def create_app(config_class=Config):
     login_manager.login_view = "auth.login"
     login_manager.login_message = "Please log in to continue."
     login_manager.login_message_category = "warning"
+
+    app.add_template_filter(format_local, "local_dt")
 
     from app import models  # noqa: F401  (registers tables and the user_loader)
 

@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{% from "partials/_components.html" import stat_card, empty_state %}
+{% from "partials/_status.html" import status_badge %}
 
 {% block title %}Admin Dashboard | Appointment Booking{% endblock %}
 
@@ -6,55 +8,45 @@
 <h1 class="h3 mb-1">Admin Dashboard</h1>
 <p class="text-muted">Signed in as {{ current_user.name }}.</p>
 
-{% set people = [('Students', stats.students), ('Providers', stats.providers), ('Admins', stats.admins), ('Categories', stats.categories)] %}
 <div class="row g-3 mb-3">
-  {% for label, value in people %}
-    <div class="col-6 col-lg-3">
-      <div class="card shadow-sm h-100">
-        <div class="card-body">
-          <div class="text-muted small">{{ label }}</div>
-          <div class="display-6 fw-semibold">{{ value }}</div>
-        </div>
-      </div>
-    </div>
-  {% endfor %}
+  {{ stat_card("Students", stats.students, "primary", url_for('admin.users', role='student')) }}
+  {{ stat_card("Providers", stats.providers, "primary", url_for('admin.providers')) }}
+  {{ stat_card("Admins", stats.admins, "primary", url_for('admin.users', role='admin')) }}
+  {{ stat_card("Categories", stats.categories, "secondary", url_for('admin.categories')) }}
 </div>
-
-{% set statuses = [('Confirmed appointments', stats.confirmed), ('Completed', stats.completed), ('Cancelled', stats.cancelled)] %}
 <div class="row g-3 mb-4">
-  {% for label, value in statuses %}
-    <div class="col-12 col-md-4">
-      <div class="card shadow-sm h-100">
-        <div class="card-body">
-          <div class="text-muted small">{{ label }}</div>
-          <div class="h2 mb-0">{{ value }}</div>
-        </div>
-      </div>
-    </div>
-  {% endfor %}
+  {{ stat_card("Upcoming appointments", stats.upcoming, "success", url_for('admin.appointments', status='confirmed')) }}
+  {{ stat_card("Completed", stats.completed, "secondary", url_for('admin.appointments', status='completed')) }}
+  {{ stat_card("Cancelled", stats.cancelled, "secondary", url_for('admin.appointments', status='cancelled')) }}
+  {{ stat_card("Inactive accounts", stats.inactive, "warning", url_for('admin.users')) }}
 </div>
 
-<div class="row g-3">
-  <div class="col-md-4">
-    <div class="card shadow-sm h-100"><div class="card-body">
-      <h2 class="h5">Users</h2>
-      <p class="text-muted">View accounts and activate or deactivate them.</p>
-      <a class="btn btn-primary" href="{{ url_for('admin.users') }}">Manage users</a>
-    </div></div>
-  </div>
-  <div class="col-md-4">
-    <div class="card shadow-sm h-100"><div class="card-body">
-      <h2 class="h5">Service providers</h2>
-      <p class="text-muted">Create provider accounts and edit their profiles.</p>
-      <a class="btn btn-primary" href="{{ url_for('admin.providers') }}">Manage providers</a>
-    </div></div>
-  </div>
-  <div class="col-md-4">
-    <div class="card shadow-sm h-100"><div class="card-body">
-      <h2 class="h5">Categories</h2>
-      <p class="text-muted">Organize providers into appointment categories.</p>
-      <a class="btn btn-primary" href="{{ url_for('admin.categories') }}">Manage categories</a>
-    </div></div>
-  </div>
+<div class="d-flex flex-wrap gap-2 mb-4">
+  <a class="btn btn-primary" href="{{ url_for('admin.users') }}">Manage users</a>
+  <a class="btn btn-primary" href="{{ url_for('admin.providers') }}">Manage providers</a>
+  <a class="btn btn-primary" href="{{ url_for('admin.categories') }}">Manage categories</a>
+  <a class="btn btn-primary" href="{{ url_for('admin.appointments') }}">View appointments</a>
 </div>
+
+<h2 class="h5">Recent bookings</h2>
+{% if recent %}
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead><tr><th>#</th><th>Student</th><th>Provider</th><th>Appointment time</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for a in recent %}
+          <tr>
+            <td>{{ a.id }}</td>
+            <td>{{ a.student.name }}</td>
+            <td>{{ a.provider.name }}</td>
+            <td>{{ a.start_at|local_dt }}</td>
+            <td>{{ status_badge(a, now) }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  {{ empty_state("No bookings yet", "Bookings made by students will appear here.") }}
+{% endif %}
 {% endblock %}

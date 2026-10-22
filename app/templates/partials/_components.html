@@ -1,0 +1,20 @@
+{% macro stat_card(label, value, tone="primary", href=None) %}
+<div class="col-6 col-lg-3">
+  <div class="card stat-card stat-{{ tone }} h-100">
+    <div class="card-body">
+      <div class="text-muted small">{{ label }}</div>
+      <div class="display-6 fw-semibold">
+        {% if href %}<a class="stretched-link text-decoration-none text-reset" href="{{ href }}">{{ value }}</a>{% else %}{{ value }}{% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endmacro %}
+
+{% macro empty_state(title, text, href=None, label=None) %}
+<div class="empty-state text-center py-5">
+  <h2 class="h5">{{ title }}</h2>
+  <p class="text-muted mb-3">{{ text }}</p>
+  {% if href %}<a class="btn btn-primary" href="{{ href }}">{{ label }}</a>{% endif %}
+</div>
+{% endmacro %}

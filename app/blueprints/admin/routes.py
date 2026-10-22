@@ -11,6 +11,8 @@ from app.services import admin as admin_service
 from app.services.admin import AdminError
 from app.utils.roles import role_required
 
+from app.services.dashboard import admin_summary
+
 # Pages the activate/deactivate button may return to (a whitelist, never a raw URL).
 RETURN_ENDPOINTS = {"users": "admin.users", "providers": "admin.providers"}
 
@@ -32,24 +34,11 @@ def get_or_404(model, object_id):
 @bp.route("/dashboard")
 @role_required(Role.ADMIN)
 def dashboard():
-    role_counts = dict(
-        db.session.execute(db.select(User.role, func.count(User.id)).group_by(User.role)).all()
+    now = utcnow()
+    summary = admin_summary(now)
+    return render_template(
+        "admin/dashboard.html", stats=summary["stats"], recent=summary["recent"], now=now
     )
-    status_counts = dict(
-        db.session.execute(
-            db.select(Appointment.status, func.count(Appointment.id)).group_by(Appointment.status)
-        ).all()
-    )
-    stats = {
-        "students": role_counts.get(Role.STUDENT, 0),
-        "providers": role_counts.get(Role.PROVIDER, 0),
-        "admins": role_counts.get(Role.ADMIN, 0),
-        "categories": db.session.scalar(db.select(func.count(AppointmentCategory.id))),
-        "confirmed": status_counts.get(AppointmentStatus.CONFIRMED, 0),
-        "completed": status_counts.get(AppointmentStatus.COMPLETED, 0),
-        "cancelled": status_counts.get(AppointmentStatus.CANCELLED, 0),
-    }
-    return render_template("admin/dashboard.html", stats=stats)
 
 
 # ---------- Users ----------

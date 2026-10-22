@@ -1,20 +1,80 @@
 {% extends "base.html" %}
+{% from "partials/_components.html" import stat_card, empty_state %}
+{% from "partials/_status.html" import status_badge %}
 
 {% block title %}Provider Dashboard | Appointment Booking{% endblock %}
 
 {% block content %}
-<h1 class="h3 mb-1">Provider Dashboard</h1>
-<p class="text-muted">Signed in as {{ current_user.name }}.</p>
-
-<div class="row g-3">
-  <div class="col-md-6 col-lg-4">
-    <div class="card h-100 shadow-sm">
-      <div class="card-body">
-        <h2 class="h5">Availability</h2>
-        <p class="text-muted">Set your working days, hours, appointment length and blocked time.</p>
-        <a class="btn btn-primary" href="{{ url_for('provider.availability') }}">Manage availability</a>
-      </div>
-    </div>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+  <div>
+    <h1 class="h3 mb-1">Provider Dashboard</h1>
+    <p class="text-muted mb-0">Signed in as {{ current_user.name }}.</p>
+  </div>
+  <div>
+    <a class="btn btn-outline-primary" href="{{ url_for('provider.availability') }}">Manage availability</a>
+    <a class="btn btn-primary" href="{{ url_for('provider.appointments') }}">All appointments</a>
   </div>
 </div>
+
+{% if not summary.has_schedule %}
+  <div class="alert alert-warning">
+    You have not set your working hours yet, so students cannot book you.
+    <a class="alert-link" href="{{ url_for('provider.availability') }}">Set your availability</a>.
+  </div>
+{% endif %}
+
+{% if summary.awaiting %}
+  <div class="alert alert-warning">
+    <strong>You have {{ summary.awaiting_count }} appointment(s) awaiting completion.</strong>
+    <div class="table-responsive mt-2">
+      <table class="table table-sm align-middle mb-0">
+        <tbody>
+          {% for a in summary.awaiting %}
+            <tr>
+              <td>{{ a.student.name }}</td>
+              <td>{{ a.start_at|local_dt }}</td>
+              <td class="text-end">
+                <form method="post" action="{{ url_for('provider.complete_appointment', appointment_id=a.id) }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-sm btn-success">Mark completed</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endif %}
+
+<div class="row g-3 mb-4">
+  {{ stat_card("Today", summary.today_count, "primary", url_for('provider.appointments')) }}
+  {{ stat_card("Upcoming", summary.upcoming_count, "success", url_for('provider.appointments')) }}
+  {{ stat_card("Awaiting completion", summary.awaiting_count, "warning", url_for('provider.appointments', view='history')) }}
+  {{ stat_card("Completed", summary.completed_count, "secondary", url_for('provider.appointments', view='history')) }}
+</div>
+
+<h2 class="h5">Next appointments</h2>
+{% if summary.upcoming %}
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead><tr><th>Student</th><th>Date</th><th>Time</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        {% for a in summary.upcoming %}
+          <tr>
+            <td>{{ a.student.name }}</td>
+            <td>{{ a.start_at|local_dt("%a, %d %b %Y") }}</td>
+            <td>{{ a.start_at|local_dt("%I:%M %p") }} - {{ a.end_at|local_dt("%I:%M %p") }}</td>
+            <td>{{ status_badge(a, now) }}</td>
+            <td class="text-end">
+              <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('provider.appointment_detail', appointment_id=a.id) }}">Details</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  {{ empty_state("No upcoming appointments", "Appointments students book with you will appear here.") }}
+{% endif %}
 {% endblock %}

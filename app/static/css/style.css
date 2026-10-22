@@ -1,21 +1,65 @@
+body {
+  background: #f6f8fb;
+}
+
+.navbar-brand {
+  letter-spacing: 0.02em;
+}
+
 .hero {
-  background: #f1f5fb;
+  background: linear-gradient(135deg, #e8f0fe 0%, #f1f5fb 100%);
   border-radius: 1rem;
 }
 
+.card {
+  border: 1px solid #e6eaf0;
+  border-radius: 0.75rem;
+}
+
+.table > :not(caption) > * > * {
+  background-color: transparent;
+}
+
+.table thead th {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #6c757d;
+  white-space: nowrap;
+}
+
+/* Dashboard stat cards */
+.stat-card {
+  border-left: 4px solid var(--tone, #0d6efd);
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+.stat-card:hover {
+  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+.stat-primary { --tone: #0d6efd; }
+.stat-success { --tone: #198754; }
+.stat-warning { --tone: #ffc107; }
+.stat-secondary { --tone: #6c757d; }
+
+.empty-state {
+  background: #fff;
+  border: 1px dashed #cdd5df;
+  border-radius: 0.75rem;
+}
+
+/* Booking calendar */
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 0.35rem;
 }
-
 .calendar-grid .cal-head {
   text-align: center;
   font-weight: 600;
   font-size: 0.8rem;
   color: #6c757d;
 }
-
 .calendar-grid .cal-day {
   display: block;
   width: 100%;
@@ -24,8 +68,38 @@
   line-height: 1.1;
   text-align: center;
 }
-
 .calendar-grid .cal-day small {
   display: block;
   font-size: 0.7rem;
+}
+
+/* Accessibility */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 2000;
+  padding: 0.5rem 1rem;
+  background: #0d6efd;
+  color: #fff;
+}
+.skip-link:focus {
+  left: 0;
+}
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid #ffbf47;
+  outline-offset: 2px;
+}
+main:focus {
+  outline: none;
+}
+
+@media (max-width: 575.98px) {
+  .display-6 {
+    font-size: 1.75rem;
+  }
 }

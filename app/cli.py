@@ -1,11 +1,17 @@
-from datetime import time
+from datetime import time, timedelta
 
 import click
 from sqlalchemy import inspect
 
 from app.extensions import db
-from app.models import AppointmentCategory, AvailabilitySchedule, ServiceProvider, User
-from app.models.common import Role
+from app.models import (
+    Appointment,
+    AppointmentCategory,
+    AvailabilitySchedule,
+    ServiceProvider,
+    User,
+)
+from app.models.common import AppointmentStatus, Role, utcnow
 
 # Development-only demo accounts (name, email, password, role).
 SEED_ACCOUNTS = [
@@ -84,3 +90,45 @@ def register_cli(app):
 
         db.session.commit()
         click.echo("Done. These are development-only credentials; never use them in production.")
+
+    @app.cli.command("seed-demo")
+    def seed_demo():
+        """Add sample appointments in every state for the demo accounts (run seed-dev first)."""
+        student = db.session.execute(
+            db.select(User).filter_by(email="student@campus.edu")
+        ).scalar_one_or_none()
+        provider_user = db.session.execute(
+            db.select(User).filter_by(email="rao@campus.edu")
+        ).scalar_one_or_none()
+        if student is None or provider_user is None or provider_user.provider_profile is None:
+            raise click.ClickException("Run 'flask --app run seed-dev' first.")
+
+        if db.session.query(Appointment).count():
+            click.echo("Appointments already exist; nothing added.")
+            return
+
+        provider = provider_user.provider_profile
+        now = utcnow().replace(minute=0, second=0, microsecond=0)
+        length = timedelta(minutes=provider.slot_duration_minutes)
+        samples = [
+            (now - timedelta(days=2), AppointmentStatus.CONFIRMED),   # started: awaiting completion
+            (now - timedelta(days=9), AppointmentStatus.COMPLETED),
+            (now - timedelta(days=5), AppointmentStatus.CANCELLED),
+            (now + timedelta(days=3), AppointmentStatus.CONFIRMED),   # upcoming
+        ]
+        for start, status in samples:
+            db.session.add(
+                Appointment(
+                    student_id=student.id,
+                    provider_id=provider.id,
+                    start_at=start,
+                    end_at=start + length,
+                    status=status,
+                    notes="Demo appointment",
+                    cancelled_at=now - timedelta(days=6)
+                    if status == AppointmentStatus.CANCELLED
+                    else None,
+                )
+            )
+        db.session.commit()
+        click.echo("Added 4 demo appointments (awaiting completion, completed, cancelled, upcoming).")

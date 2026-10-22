@@ -29,6 +29,8 @@ from app.services.appointments import (
     complete_by_provider,
 )
 
+from app.services.dashboard import provider_summary
+
 def current_provider():
     """The logged-in provider's own profile. Every query below is scoped to it (rule BR-4)."""
     profile = current_user.provider_profile
@@ -72,7 +74,11 @@ def render_availability_page(provider, schedule_form, block_form):
 @bp.route("/dashboard")
 @role_required(Role.PROVIDER)
 def dashboard():
-    return render_template("provider/dashboard.html")
+    provider = current_provider()
+    now = utcnow()
+    return render_template(
+        "provider/dashboard.html", summary=provider_summary(provider, now), now=now
+    )
 
 
 @bp.route("/availability")

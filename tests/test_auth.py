@@ -4,6 +4,8 @@ from app.extensions import db
 from app.models import User
 from app.models.common import Role
 
+from helpers import make_provider
+
 PASSWORD = "Password123"
 
 
@@ -147,7 +149,10 @@ def test_student_cannot_access_other_roles(client):
     ],
 )
 def test_provider_and_admin_reach_own_dashboards(client, role, path, text):
-    create_user("staff@example.com", role=role)
+    if role == Role.PROVIDER:
+        make_provider("staff@example.com")  # creates the account and its provider profile
+    else:
+        create_user("staff@example.com", role=role)
     login(client, "staff@example.com")
     response = client.get(path)
     assert response.status_code == 200

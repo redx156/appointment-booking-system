@@ -24,6 +24,8 @@ from app.services.appointments import (
     reschedule_appointment,
 )
 
+from app.services.dashboard import student_summary
+
 def get_bookable_provider(provider_id: int) -> ServiceProvider:
     provider = db.session.get(ServiceProvider, provider_id)
     if provider is None or not provider.user.is_active:
@@ -50,17 +52,10 @@ def parse_utc_start(raw: Optional[str]) -> Optional[datetime]:
 @bp.route("/dashboard")
 @role_required(Role.STUDENT)
 def dashboard():
-    upcoming = db.session.execute(
-        db.select(Appointment)
-        .where(
-            Appointment.student_id == current_user.id,
-            Appointment.status == AppointmentStatus.CONFIRMED,
-            Appointment.end_at > utcnow(),
-        )
-        .order_by(Appointment.start_at)
-        .limit(5)
-    ).scalars().all()
-    return render_template("student/dashboard.html", upcoming=upcoming)
+    now = utcnow()
+    return render_template(
+        "student/dashboard.html", summary=student_summary(current_user.id, now), now=now
+    )
 
 
 @bp.route("/providers")

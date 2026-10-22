@@ -11,6 +11,9 @@ from app.models import (
 )
 from app.models.common import AppointmentStatus, Role
 
+from app.services.slots import generate_slots
+from app.utils.timeutils import local_today
+
 PASSWORD = "Password123"
 NOW = datetime(2030, 1, 1, 0, 0)  # the "current time" (naive UTC) for service tests
 MONDAY = date(2030, 1, 7)         # a Monday inside the booking horizon of NOW
@@ -85,3 +88,16 @@ def add_block(provider, start_at, end_at, reason=None):
 
 def login(client, email, password=PASSWORD):
     return client.post("/auth/login", data={"email": email, "password": password})
+
+
+def provider_open_every_day(email="rao@example.com"):
+    provider = make_provider(email)
+    for weekday in range(7):
+        add_schedule(provider, weekday=weekday, start=time(9, 0), end=time(17, 0))
+    return provider
+
+
+def future_slot_start(provider, days=3, index=0):
+    """An open slot `days` days ahead (beyond the 12-hour rule), using the real clock."""
+    day = local_today() + timedelta(days=days)
+    return [s for s in generate_slots(provider, day) if s.available][index].start_at
